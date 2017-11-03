@@ -2,11 +2,13 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
+import { Sequelize } from 'sequelize';
 
 import typeDefs from './server/schema';
 import resolvers from './server/graphql/resolvers/resolvers';
+import models from './server/models';
 
-export const schema = makeExecutableSchema({
+const schema = makeExecutableSchema({
   typeDefs,
   resolvers
 });
@@ -18,8 +20,11 @@ const graphqlEndpoint = '/graphql';
 app.use(graphqlEndpoint, bodyParser.json(), graphqlExpress({ schema }));
 
 app.use('/graphiql', graphiqlExpress({ endpointURL: graphqlEndpoint }));
-app.listen(PORT, () => {
-  console.log('------------------------------------');
-  console.log(`GraphQL server running on port: ${PORT}`);
-  console.log('------------------------------------');
+
+models.sequelize.sync({}).then(() => {
+  app.listen(PORT, () => {
+    console.log('------------------------------------');
+    console.log(`GraphQL server running on port: ${PORT}`);
+    console.log('------------------------------------');
+  });
 });
